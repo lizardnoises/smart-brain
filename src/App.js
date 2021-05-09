@@ -33,7 +33,7 @@ class App extends Component {
       input: '',
       imageUrl: '',
       boxes: [],
-      route: 'signin',
+      route: 'sign-in',
       isSignedIn: false,
       user: {
         id: '',
@@ -86,7 +86,26 @@ class App extends Component {
     this.setState({ imageUrl: this.state.input }, () => {
       app.models
         .predict(Clarifai.FACE_DETECT_MODEL, this.state.imageUrl)
-        .then(this.calculateFaceLocations)
+        .then((response) => {
+          if (response) {
+            fetch('http://localhost:3000/image', {
+              method: 'put',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                id: this.state.user.id,
+              }),
+            })
+              .then((response) => response.json())
+              .then((count) => {
+                this.setState(
+                  Object.assign(this.state.user, { entries: count })
+                );
+              });
+            this.calculateFaceLocations(response);
+          }
+        })
         .catch(console.log);
     });
   };
